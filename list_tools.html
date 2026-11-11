@@ -1,0 +1,46 @@
+{% set reviewer_arg = selected_reviewer|default('') or none %}
+<section class="summary-cards" aria-label="Application totals">
+  <a class="summary-card" href="{{ url_for(list_endpoint,reviewer=reviewer_arg) }}" {% if not q and not selected_status and not priority and not review_due %}aria-current="true"{% endif %}>
+    <span>All applications</span><strong data-total="all">{{ total }}</strong>
+  </a>
+  {% for status in statuses %}
+  <a class="summary-card" href="{{ url_for(list_endpoint,status=status,reviewer=reviewer_arg) }}" {% if selected_status==status and not q and not priority and not review_due %}aria-current="true"{% endif %}>
+    <span>{{ status }}</span><strong data-total="{{ status }}">{{ counts[status] }}</strong>
+  </a>
+  {% endfor %}
+</section>
+<p class="totals-help">{{ 'Totals cover all applications in the selected assignment.' if reviewer_arg else 'Totals cover all applications in this workspace.' }} Select a card to filter by status.</p>
+{% if staff_planning %}
+<section class="review-workload" aria-label="Review timing totals">
+  <a class="summary-card" href="{{ url_for(list_endpoint,review_due='overdue',reviewer=reviewer_arg) }}" {% if review_due=='overdue' and not q and not priority and not selected_status %}aria-current="true"{% endif %}><span>Overdue reviews</span><strong data-review-total="overdue">{{ review_totals.overdue }}</strong></a>
+  <a class="summary-card" href="{{ url_for(list_endpoint,review_due='today',reviewer=reviewer_arg) }}" {% if review_due=='today' and not q and not priority and not selected_status %}aria-current="true"{% endif %}><span>Due today</span><strong data-review-total="today">{{ review_totals.today }}</strong></a>
+</section>
+<p class="totals-help">Review timing totals cover all Submitted and Under review cases {{ 'in the selected assignment' if reviewer_arg else 'in your workspace' }}, using Dubai’s date. Waiting and completed cases are excluded.</p>
+{% endif %}
+<form class="list-filters{% if staff_planning %} staff-filters{% endif %}" method="get" action="{{ url_for(list_endpoint) }}">
+  <div class="search-field"><label for="q">Search by company or reference</label>
+    <input id="q" name="q" type="search" value="{{ q }}" maxlength="120" placeholder="Company name or GV- reference">
+  </div>
+  <div><label for="status">Application status</label>
+    <select id="status" name="status">
+      <option value="">All statuses</option>
+      {% if reviewer_options is defined %}<option value="Open" {% if selected_status=='Open' %}selected{% endif %}>Open cases</option>{% endif %}
+      {% for status in statuses %}<option value="{{ status }}" {% if selected_status==status %}selected{% endif %}>{{ status }}</option>{% endfor %}
+    </select>
+  </div>
+  {% if staff_planning %}
+  <div><label for="priority">Review priority</label><select id="priority" name="priority"><option value="">All priorities</option>{% for choice in review_priorities %}<option value="{{ choice }}" {% if priority==choice %}selected{% endif %}>{{ choice }}</option>{% endfor %}</select></div>
+  <div><label for="review-due">Review timing</label><select id="review-due" name="review_due"><option value="">All cases</option>{% for key,label in review_timing_filters.items() %}<option value="{{ key }}" {% if review_due==key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+  {% endif %}
+  {% if reviewer_options is defined %}
+  <div><label for="assigned-reviewer">Assigned reviewer</label>
+    <select id="assigned-reviewer" name="reviewer"><option value="">All assignments</option>
+      <option value="unassigned" {% if selected_reviewer=='unassigned' %}selected{% endif %}>Unassigned</option>
+      {% for reviewer in reviewer_options %}<option value="{{ reviewer.id }}" {% if selected_reviewer==reviewer.id|string %}selected{% endif %}>{{ reviewer.name }} · {{ reviewer.email }}</option>{% endfor %}
+    </select>
+  </div>
+  {% endif %}
+  <button class="button primary">Apply filters</button>
+  <a class="clear-filters" href="{{ url_for(list_endpoint) }}">Clear filters</a>
+</form>
+{% if staff_planning %}<p class="totals-help">Active cases appear first, then priority (Urgent, High, Normal) and earliest target date. Timing filters include only Submitted and Under review cases.</p>{% endif %}

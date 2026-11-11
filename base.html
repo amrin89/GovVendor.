@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="GovVendor: an independent supplier registration learning project using fictional information.">
+  <title>{% block title %}GovVendor · Supplier registration{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+</head>
+<body>
+  <a href="#content" class="skip-link">Skip to content</a>
+  <div class="demo-banner">Independent portfolio demo · Use fictional details · No official registrations</div>
+  <div class="app-shell">
+    <aside class="sidebar"><a class="brand" href="{{ url_for('home') }}"><span class="brand-mark">G</span>GovVendor</a><p class="brand-description">Supplier registration portal</p><nav aria-label="Main navigation"><a href="{{ url_for('home') }}" {% if request.endpoint=='home' %}aria-current="page"{% endif %}>Home</a><a href="{{ url_for('demo_walkthrough') }}" {% if request.endpoint=='demo_walkthrough' %}aria-current="page"{% endif %}>Demo walkthrough</a>{% if g.user and g.user.role=='administrator' %}<a href="{{ url_for('admin_dashboard') }}" {% if request.endpoint in ('admin_dashboard','admin_detail','admin_assign') %}aria-current="page"{% endif %}>Administration</a><a href="{{ url_for('admin_workload') }}" {% if request.endpoint=='admin_workload' %}aria-current="page"{% endif %}>Reviewer workload</a><a href="{{ url_for('admin_suppliers') }}" {% if request.endpoint=='admin_suppliers' %}aria-current="page"{% endif %}>Approved suppliers</a><a href="{{ url_for('admin_activity') }}" {% if request.endpoint=='admin_activity' %}aria-current="page"{% endif %}>Activity log</a><a href="{{ url_for('admin_reviewers') }}" {% if request.endpoint=='admin_reviewers' %}aria-current="page"{% endif %}>Reviewer accounts</a>{% elif g.user and g.user.role=='officer' %}<a href="{{ url_for('review_queue') }}" {% if request.endpoint in ('review_queue','review_detail','review_action') %}aria-current="page"{% endif %}>Review queue</a>{% elif g.user %}<a href="{{ url_for('dashboard') }}" {% if request.endpoint=='dashboard' %}aria-current="page"{% endif %}>My applications</a><a href="{{ url_for('application_form') }}" {% if request.endpoint=='application_form' %}aria-current="page"{% endif %}>New registration</a>{% else %}<a href="{{ url_for('register') }}" {% if request.endpoint=='register' %}aria-current="page"{% endif %}>Create account</a><a href="{{ url_for('login') }}" {% if request.endpoint=='login' %}aria-current="page"{% endif %}>Sign in</a>{% endif %}{% if g.user and g.user.role in ('applicant','officer','administrator') %}<a href="{{ url_for('reports') }}" {% if request.endpoint=='reports' %}aria-current="page"{% endif %}>Reports</a>{% endif %}{% if g.user %}<a href="{{ url_for('notifications') }}" {% if request.endpoint in ('notifications','read_notification','read_all_notifications','open_notification') %}aria-current="page"{% endif %}>Notifications{% if unread_notifications %} <span class="nav-unread" aria-label="{{ unread_notifications }} unread">{{ unread_notifications }}</span>{% endif %}</a>{% endif %}</nav><p class="sidebar-note">An independent learning project.<br>Not affiliated with Dubai Government.</p></aside>
+    <div class="main-shell"><header class="topbar"><p>{{ 'Administrator workspace' if g.user and g.user.role=='administrator' else ('Reviewer workspace' if g.user and g.user.role=='officer' else 'Supplier workspace') }}</p>{% if g.user %}<div class="account"><span>{{ g.user.name }}</span><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="text-button">Sign out</button></form></div>{% else %}<a href="{{ url_for('login') }}">Sign in →</a>{% endif %}</header>
+      <main id="content">{% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}<div class="messages" aria-live="polite">{% for category,message in messages %}<p class="message {{ category }}">{{ message }}</p>{% endfor %}</div>{% endif %}{% endwith %}{% block content %}{% endblock %}</main>
+      <footer>GovVendor v{{ app_version }} · Fictional supplier records · This demo does not issue licences or official certificates.</footer>
+    </div>
+  </div>
+</body>
+</html>

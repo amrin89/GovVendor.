@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Application reports · GovVendor{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <p class="eyebrow">Your workspace</p><h1>Application reports</h1>
+  <p>Filter your application records, check their current status and download the matching rows.</p>
+</div>
+<form class="panel report-filters" method="get" action="{{ url_for('reports') }}">
+  <div class="report-filter-grid">
+    <div><label for="report-q">Company name or reference</label><input id="report-q" name="q" type="search" maxlength="120" value="{{ filters.q }}" placeholder="Company name or GV- reference"></div>
+    <div><label for="report-status">Current status</label><select id="report-status" name="status"><option value="">All statuses</option>{% for status in statuses %}<option {% if filters.status==status %}selected{% endif %}>{{ status }}</option>{% endfor %}</select></div>
+    <div><label for="from-date">Created from</label><input id="from-date" name="from_date" type="date" value="{{ filters.from_date }}"></div>
+    <div><label for="to-date">Created through</label><input id="to-date" name="to_date" type="date" value="{{ filters.to_date }}"></div>
+  </div>
+  <div class="report-actions"><button class="button primary">Apply report filters</button><a href="{{ url_for('reports') }}">Clear filters</a></div>
+</form>
+<p class="totals-help">Dates include the whole start and end days in Dubai time. Counts show current statuses for matching application records, including earlier approvals and renewals.</p>
+<section class="report-cards" aria-label="Matching application totals">
+  <div class="summary-card"><span>Matching applications</span><strong data-report-total="all">{{ total }}</strong></div>
+  <div class="summary-card"><span>New registrations</span><strong data-report-total="registrations">{{ registrations }}</strong></div>
+  <div class="summary-card"><span>Renewals</span><strong data-report-total="renewals">{{ renewals }}</strong></div>
+  <div class="summary-card"><span>Currently approved</span><strong data-report-total="approved">{{ counts.get('Approved',0) }}</strong></div>
+</section>
+<section class="panel status-report">
+  <div class="panel-heading"><h2>Current status breakdown</h2><span class="count">{{ total }} matching record(s)</span></div>
+  <dl class="status-counts">{% for status in statuses %}<div><dt>{{ status }}</dt><dd>{{ counts[status] }}</dd></div>{% endfor %}</dl>
+</section>
+<section class="panel">
+  <div class="panel-heading report-results-heading"><h2>Matching applications</h2><a class="button" href="{{ url_for('report_csv',**filters) }}">Download CSV ({{ total }} rows)</a></div>
+  {% if applications %}
+  <div class="table-wrap"><table><thead><tr><th scope="col">Company / reference</th><th scope="col">Record type</th><th scope="col">Current status</th><th scope="col">Created · Dubai time</th><th scope="col">Action</th></tr></thead>
+    <tbody>{% for application in applications %}<tr>
+      <td>{{ application.company_name }}<small>{{ application.reference }}</small></td>
+      <td>{{ 'Renewal' if application.renewal_of else 'New registration' }}{% if application.renewal_of %}<small>{{ application.renewal_of }}</small>{% endif %}</td>
+      <td><span class="badge">{{ application.status }}</span></td>
+      <td>{{ application.created_at[:10] }}<small>{{ application.created_at[11:16] }}</small></td>
+      <td><a href="{{ url_for('admin_detail' if g.user.role=='administrator' else ('review_detail' if g.user.role=='officer' else 'application_detail'),reference=application.reference) }}">Open →</a></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<div class="empty-state"><h2>No applications match these filters.</h2><p>Clear the dates or try a different status, company name or reference.</p><a href="{{ url_for('reports') }}">Clear filters</a></div>{% endif %}
+</section>
+<p class="report-export-help">The CSV includes the matching company/contact details, status, sample licence expiry and renewal reference. You can open it in Excel, Google Sheets or a text editor.</p>
+{% endblock %}

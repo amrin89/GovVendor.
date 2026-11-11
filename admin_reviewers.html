@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Reviewer accounts · GovVendor{% endblock %}
+{% block content %}
+<div class="page-heading"><p class="eyebrow">Administrator workspace</p><h1>Reviewer accounts</h1><p>Create separate demo reviewer logins so each person has their own assigned queue.</p></div>
+<div class="detail-grid staff-grid">
+  <section class="panel"><div class="panel-heading"><h2>Create a reviewer</h2></div>
+    <form class="stack-form staff-form" method="post">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <label for="reviewer-name">Reviewer name</label><input id="reviewer-name" name="name" value="{{ request.form.get('name','') }}" minlength="2" maxlength="80" autocomplete="off" placeholder="Demo Reviewer Two" required>
+      <label for="reviewer-email">Demo email</label><input id="reviewer-email" name="email" type="email" value="{{ request.form.get('email','') }}" maxlength="254" autocomplete="off" placeholder="reviewer2@example.com" required>
+      <label for="reviewer-password">Demo password</label><input id="reviewer-password" name="password" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
+      <p class="field-help">Choose 12–128 characters. Use a demo password you do not use elsewhere. No invitation email is sent.</p>
+      <button class="button primary">Create reviewer account</button>
+    </form>
+  </section>
+  <section class="panel"><div class="panel-heading"><h2>Existing reviewers</h2><span class="count">{{ reviewers|length }} account(s)</span></div>
+    {% if reviewers %}<ul class="reviewer-list">{% for reviewer in reviewers %}<li><strong>{{ reviewer.name }}</strong><span>{{ reviewer.email }}</span></li>{% endfor %}</ul>
+    {% else %}<div class="empty-state"><h2>No reviewers yet.</h2><p>Create the first reviewer using the form.</p></div>{% endif %}
+  </section>
+</div>
+{% endblock %}

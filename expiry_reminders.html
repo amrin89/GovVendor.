@@ -1,0 +1,17 @@
+{% if reminders %}
+<section class="panel expiry-reminders" aria-labelledby="expiry-title">
+  <div class="panel-heading"><h2 id="expiry-title">Sample licence reminders</h2><span class="count">{{ reminders|length }} due or expired</span></div>
+  <ul>
+    {% for reminder in reminders %}
+    <li>
+      <div><strong>{{ reminder.application.company_name }}</strong>
+        <p>{% if reminder.days < 0 %}Expired {{ -reminder.days }} day(s) ago{% elif reminder.days == 0 %}Expires today{% else %}Expires in {{ reminder.days }} day(s){% endif %} · {{ reminder.application.licence_expiry }}</p>
+        {% if reminder.renewal %}<small>Renewal status: {{ reminder.renewal.status }}</small>{% endif %}
+      </div>
+      <a href="{{ url_for('application_detail',reference=reminder.renewal.reference if reminder.renewal else reminder.application.reference) }}">{{ 'Open renewal →' if reminder.renewal else 'View registration →' }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="reminder-help">Shown here when a sample licence is due within 30 days or has expired. These are reminders inside GovVendor; no email is sent.</p>
+</section>
+{% endif %}

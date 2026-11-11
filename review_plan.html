@@ -1,0 +1,21 @@
+<section class="panel review-plan-panel" aria-labelledby="review-plan-title">
+  <div class="panel-heading"><h2 id="review-plan-title">Review plan</h2><span class="count">Demo review target</span></div>
+  <div class="review-plan-body">
+    <dl class="review-plan-values">
+      <div><dt>Priority</dt><dd><span class="badge priority-{{ plan.priority|lower }}">{{ plan.priority }}</span></dd></div>
+      <div><dt>Target date</dt><dd>{{ plan.target_date or 'Not set' }}</dd></div>
+      <div><dt>Review timing</dt><dd class="timing-{{ plan.timing }}">{{ plan.label }}</dd></div>
+    </dl>
+    {% if admin_view and application.status in ('Submitted','Under review','Changes requested') %}
+    <form class="review-plan-form" method="post" action="{{ url_for('save_review_plan',reference=application.reference) }}">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <input type="hidden" name="revision" value="{{ revision }}">
+      <div><label for="review-priority">Review priority</label><select id="review-priority" name="priority">{% for choice in review_priorities %}<option value="{{ choice }}" {% if choice==plan.priority %}selected{% endif %}>{{ choice }}</option>{% endfor %}</select></div>
+      <div><label for="review-target-date">Target review date (optional)</label><input id="review-target-date" type="date" name="target_date" value="{{ plan.target_date or '' }}" aria-describedby="review-plan-help"></div>
+      <button class="button primary">Save review plan</button>
+    </form>
+    <p class="field-help" id="review-plan-help">Leave the date empty to clear it. Past dates are allowed for existing backlogs. Changes are recorded in activity and notify the applicant and assigned reviewer.</p>
+    {% endif %}
+    <p class="checklist-help">This is a planning target using Dubai’s calendar date. Cases waiting for applicant corrections are shown as waiting; completed decisions are not counted as overdue.</p>
+  </div>
+</section>

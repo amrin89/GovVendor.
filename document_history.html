@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Document history · GovVendor{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for(back_endpoint,reference=application.reference) }}">← Back to application</a>
+<div class="page-heading"><p class="eyebrow">{{ application.reference }}</p><h1>Document history</h1><p>{{ label }} · {{ application.company_name }}</p></div>
+<section class="panel">
+  <div class="panel-heading"><h2>{{ label }}</h2><span class="count">{{ versions|length }} saved version(s)</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Version</th><th scope="col">Filename</th><th scope="col">Uploaded · Dubai time</th><th scope="col">Uploaded by</th><th scope="col">Download</th></tr></thead>
+    <tbody>{% for version in versions %}<tr>
+      <td><strong>Version {{ version.version }}</strong>{% if loop.first %}<small><span class="badge attached">Current</span></small>{% endif %}</td>
+      <td>{{ version.filename }}</td>
+      <td>{{ version.uploaded_at[:10] }}<small>{{ version.uploaded_at[11:16] }}</small></td>
+      <td>{{ version.uploader }}</td>
+      <td><a href="{{ url_for('download_version',reference=application.reference,kind=kind,version=version.version) }}">Download v{{ version.version }} →</a></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+<p class="history-help">Each new PDF upload is saved as a separate version. Your application uses the newest one. Files replaced before document history was enabled are unavailable.</p>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Activity log · GovVendor{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <p class="eyebrow">Administrator workspace</p>
+  <h1>Activity log</h1>
+  <p>Review recorded actions across submitted cases. Open a case to see its full history.</p>
+</div>
+<form class="list-filters staff-filters" method="get" action="{{ url_for('admin_activity') }}">
+  <div><label for="activity-search">Search cases, people or actions</label>
+    <input id="activity-search" name="q" type="search" maxlength="120" value="{{ filters.q }}" placeholder="Company, GV- reference or action">
+  </div>
+  <div><label for="activity-role">Actor role</label>
+    <select id="activity-role" name="role"><option value="">All roles</option>
+      {% for key, label in roles.items() %}<option value="{{ key }}" {% if filters.role==key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div><label for="activity-from">From date</label><input id="activity-from" name="from_date" type="date" value="{{ filters.from_date }}"></div>
+  <div><label for="activity-to">To date</label><input id="activity-to" name="to_date" type="date" value="{{ filters.to_date }}"></div>
+  <button class="button primary">Apply filters</button>
+  <a class="clear-filters" href="{{ url_for('admin_activity') }}">Clear filters</a>
+</form>
+<section class="panel" aria-labelledby="activity-title">
+  <div class="panel-heading"><h2 id="activity-title">Case activity</h2><span class="count">{% if events %}{{ offset+1 }}–{{ offset+events|length }} of {{ total }}{% else %}0 results{% endif %}</span></div>
+  {% if events %}
+  <div class="table-wrap"><table class="activity-table">
+    <thead><tr><th scope="col">Date and time · Dubai</th><th scope="col">Case</th><th scope="col">Actor</th><th scope="col">Recorded action</th></tr></thead>
+    <tbody>{% for event in events %}<tr>
+      <td><time datetime="{{ event.created_at }}">{{ event.created_at[:10] }}<small>{{ event.created_at[11:19] }}</small></time></td>
+      <td>{{ event.company_name }}<small><a href="{{ url_for('admin_detail', reference=event.reference) }}">{{ event.reference }} →</a></small></td>
+      <td>{{ event.actor_name }}<small>{{ roles[event.actor_role] }}</small>{% if event.staff_email %}<small>{{ event.staff_email }}</small>{% endif %}</td>
+      <td class="activity-description">{{ event.description }}</td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}
+  <div class="empty-state"><h2>No activity found.</h2><p>Try different filters, or check back after a case is submitted.</p></div>
+  {% endif %}
+</section>
+{% if pages>1 %}
+<nav class="activity-pagination" aria-label="Activity pages">
+  {% if page>1 %}<a class="button" href="{{ url_for('admin_activity',page=page-1,**filters) }}">← Previous</a>{% endif %}
+  <span class="count">Page {{ page }} of {{ pages }}</span>
+  {% if page<pages %}<a class="button" href="{{ url_for('admin_activity',page=page+1,**filters) }}">Next →</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

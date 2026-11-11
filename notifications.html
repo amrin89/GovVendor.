@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Notifications · GovVendor{% endblock %}
+{% block content %}
+<div class="page-heading heading-actions">
+  <div><p class="eyebrow">Your workspace</p><h1>Notifications</h1><p>Keep track of submissions, reviewer assignments and application updates.</p></div>
+  {% if unread_notifications %}
+  <form method="post" action="{{ url_for('read_all_notifications') }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="button">Mark all as read</button></form>
+  {% endif %}
+</div>
+<div class="inbox-toolbar">
+  <nav aria-label="Notification filters">
+    <a href="{{ url_for('notifications') }}" {% if view=='all' %}aria-current="page"{% endif %}>All</a>
+    <a href="{{ url_for('notifications',view='unread') }}" {% if view=='unread' %}aria-current="page"{% endif %}>Unread ({{ unread_notifications }})</a>
+  </nav><span class="count">{{ total }} {{ 'unread' if view=='unread' else 'notification(s)' }}</span>
+</div>
+{% if notifications %}
+<ul class="notification-list">
+  {% for item in notifications %}
+  {% set notification=item.record %}
+  <li class="panel notification-item {% if not notification.read_at %}notification-unread{% endif %}">
+    <div class="notification-heading"><strong>{{ notification.reference }}</strong>{% if not notification.read_at %}<span class="badge attached">Unread</span>{% else %}<span class="count">Read</span>{% endif %}</div>
+    <p class="notification-message">{{ notification.description }}</p>
+    <p class="notification-time">{{ notification.created_at[:10] }} · {{ notification.created_at[11:16] }} Dubai time</p>
+    <div class="notification-actions">
+      {% if item.target %}
+      <form method="post" action="{{ url_for('open_notification',notification_id=notification.id) }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="button primary">{{ 'Open messages' if notification.is_message else 'Open application' }}</button></form>
+      {% else %}<p class="field-help">This application is no longer available to your account. Its assignment may have changed.</p>{% endif %}
+      {% if not notification.read_at %}
+      <form method="post" action="{{ url_for('read_notification',notification_id=notification.id) }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="view" value="{{ view }}"><button class="text-button">Mark as read</button></form>
+      {% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% if pages>1 %}<nav class="inbox-pages" aria-label="Notification pages">
+  {% if page>1 %}<a class="button" href="{{ url_for('notifications',view=view,page=page-1) }}">← Newer</a>{% endif %}
+  <span class="count">Page {{ page }} of {{ pages }}</span>
+  {% if page<pages %}<a class="button" href="{{ url_for('notifications',view=view,page=page+1) }}">Older →</a>{% endif %}
+</nav>{% endif %}
+{% else %}
+<section class="panel empty-state"><h2>{{ 'You are caught up.' if view=='unread' else 'No notifications yet.' }}</h2>
+  <p>{{ 'All your notifications have been read.' if view=='unread' else 'New submissions, assignments and review updates will appear here after they happen.' }}</p>
+  <a href="{{ url_for('dashboard') }}">Open your workspace →</a>
+</section>
+{% endif %}
+{% endblock %}

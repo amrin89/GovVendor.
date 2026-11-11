@@ -1,0 +1,67 @@
+{% extends 'application.html' %}
+{% block review_controls %}
+<section class="panel documents-panel" aria-labelledby="review-checklist-heading">
+  <div class="panel-heading">
+    <h2 id="review-checklist-heading">Review checklist</h2>
+    <span class="count" data-review-count="{{ checked_count }}">{{ checked_count }} of {{ review_checks|length }} checked</span>
+  </div>
+  <div class="review-controls">
+    {% if application.status=='Under review' %}
+    <p class="section-help" id="review-checks-help">Open the current PDFs above and check the saved company details. Tick each item you have checked, then save. All four saved checks are needed to approve.</p>
+    <form method="post" action="{{ url_for('save_review_checklist',reference=application.reference) }}" class="checklist-form">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <input type="hidden" name="revision" value="{{ revision }}">
+      <fieldset aria-describedby="review-checks-help">
+        <legend class="sr-only">Checks for the current application</legend>
+        {% for key,label in review_checks.items() %}
+        <label class="review-check" for="check-{{ key }}">
+          <input type="checkbox" id="check-{{ key }}" name="checks" value="{{ key }}" {% if checklist and checklist[key] %}checked{% endif %}>
+          <span>{{ label }}</span>
+        </label>
+        {% endfor %}
+      </fieldset>
+      <button class="button" type="submit">Save checklist</button>
+    </form>
+    {% elif checklist %}
+    <ul class="saved-checks">
+      {% for key,label in review_checks.items() %}
+      <li><span class="badge {{ 'attached' if checklist[key] else '' }}">{{ 'Checked' if checklist[key] else 'Not checked' }}</span><span>{{ label }}</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="notice">{{ 'Start the review to fill in the checklist.' if application.status=='Submitted' else 'No saved checklist for this review. Earlier decisions are kept as recorded.' }}</p>
+    {% endif %}
+    {% if checklist %}<p class="checklist-help">Last saved {{ checklist.saved_at[:16]|replace('T',' · ') }} Dubai time.</p>{% endif %}
+    <p class="checklist-help">These are manual checks for this fictional demo. A new submission or reviewer assignment clears the saved checks. Checklist saves appear in application activity.</p>
+  </div>
+</section>
+<section class="panel documents-panel">
+  <div class="panel-heading"><h2>Review actions</h2></div>
+  <div class="review-controls">
+    {% if application.status in ('Submitted','Under review') %}
+    <form method="post" action="{{ url_for('review_action',reference=application.reference) }}">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <input type="hidden" name="revision" value="{{ revision }}">
+      {% if application.status=='Submitted' %}
+      <p class="section-help">{{ 'This application is ready for you to review again.' if has_reviewed else ('This application is assigned to you. Start your review when ready.' if application.reviewer_id else 'Start the review to assign this application to yourself.') }}</p>
+      <button class="button primary" name="action" value="start">{{ 'Resume review' if has_reviewed else 'Start review' }}</button>
+      {% else %}
+      <label for="note">Note for the applicant</label>
+      <textarea id="note" name="note" rows="4" maxlength="800" aria-describedby="note-help" placeholder="Example: Please replace the PDF in the company profile slot."></textarea>
+      <p class="section-help" id="note-help">Required when you request changes or reject. The applicant can read this note.</p>
+      {% if not checklist_ready %}<p class="section-help" id="approval-help">Save all four checklist items above to enable approval. You can still request changes or reject with a note.</p>{% endif %}
+      <div class="actions">
+        <button class="button primary" name="action" value="approve" {% if not checklist_ready %}disabled aria-describedby="approval-help"{% endif %}>Approve</button>
+        <button class="button" name="action" value="request-changes">Request changes</button>
+        <button class="button" name="action" value="reject">Reject</button>
+      </div>
+      {% endif %}
+    </form>
+    {% elif application.status=='Changes requested' %}
+    <p class="notice">Waiting for the applicant to make corrections and resubmit.</p>
+    {% else %}
+    <p class="notice">This review is complete.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

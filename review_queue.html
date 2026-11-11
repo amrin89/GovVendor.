@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Review queue · GovVendor{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <p class="eyebrow">Reviewer workspace</p>
+  <h1>Supplier review queue</h1>
+  <p>Open a new submission or continue a case you already started.</p>
+</div>
+{% include 'list_tools.html' %}
+<section class="panel">
+  <div class="panel-heading"><h2>Applications</h2><span class="count">{{ applications|length }} of {{ total }} shown</span></div>
+  {% if applications %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Company</th><th scope="col">Category</th><th scope="col">Status</th><th scope="col">Review plan</th><th scope="col">Reviewer</th><th scope="col">Action</th></tr></thead>
+    <tbody>{% for application in applications %}<tr>
+      <td>{{ application.company_name }}<small>{{ application.reference }}</small>{% if application.renewal_of %}<small class="renewal-tag">Renewal of {{ application.renewal_of }}</small>{% endif %}</td>
+      <td>{{ application.category }}</td><td><span class="badge">{{ application.status }}</span></td>
+      <td>{% include 'review_plan_cell.html' %}</td>
+      <td>{{ 'Assigned to you' if application.reviewer_id else 'Unassigned' }}</td>
+      <td><a href="{{ url_for('review_detail',reference=application.reference) }}">Open application →</a></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% elif total %}
+  <div class="empty-state"><h2>No matching applications.</h2><p>Try another company name, reference or status.</p><a href="{{ url_for(list_endpoint) }}">Clear filters</a></div>
+  {% else %}
+  <div class="empty-state"><h2>No applications to review yet.</h2><p>New applications appear here after an applicant submits them.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

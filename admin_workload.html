@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Reviewer workload · GovVendor{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <p class="eyebrow">Administrator workspace</p>
+  <h1>Reviewer workload</h1>
+  <p>See how open cases are spread across reviewers and which cases need attention.</p>
+</div>
+<section class="summary-cards" aria-label="Reviewer workload totals">
+  <a class="summary-card" href="{{ url_for('admin_dashboard',status='Open') }}"><span>Open cases</span><strong data-workload-total="open">{{ totals.open_count }}</strong></a>
+  <a class="summary-card" href="{{ url_for('admin_dashboard',reviewer='unassigned',status='Open') }}"><span>Unassigned</span><strong data-workload-total="unassigned">{{ unassigned }}</strong></a>
+  <a class="summary-card" href="{{ url_for('admin_dashboard',review_due='overdue') }}"><span>Overdue reviews</span><strong data-workload-total="overdue">{{ totals.overdue }}</strong></a>
+  <a class="summary-card" href="{{ url_for('admin_dashboard',review_due='today') }}"><span>Due today</span><strong data-workload-total="today">{{ totals.due_today }}</strong></a>
+</section>
+<p class="totals-help">Open cases include Submitted, Under review and Changes requested. Timing counts use Dubai’s date and exclude cases waiting for applicant changes.</p>
+<section class="panel" aria-labelledby="workload-title">
+  <div class="panel-heading"><h2 id="workload-title">Cases by reviewer</h2><span class="count">{{ rows|length - 1 }} reviewer{{ '' if rows|length == 2 else 's' }}</span></div>
+  <div class="table-wrap"><table class="workload-table">
+    <thead><tr><th scope="col">Reviewer</th><th scope="col">Open</th><th scope="col">Submitted</th><th scope="col">Under review</th><th scope="col">Waiting for applicant</th><th scope="col">Review timing</th><th scope="col">Action</th></tr></thead>
+    <tbody>{% for row in rows %}<tr data-workload-row="{{ row.key }}">
+      <th scope="row">{{ row.name }}{% if row.email %}<small>{{ row.email }}</small>{% endif %}</th>
+      <td data-count="open">{{ row.open_count }}</td><td data-count="submitted">{{ row.submitted }}</td><td data-count="reviewing">{{ row.reviewing }}</td><td data-count="waiting">{{ row.waiting }}</td>
+      <td class="workload-timing">
+        <a href="{{ url_for('admin_dashboard',reviewer=row.key,review_due='overdue') }}" aria-label="{{ row.overdue }} overdue for {{ row.email or row.name }}" {% if row.overdue %}class="timing-overdue"{% endif %}><span data-count="overdue">{{ row.overdue }}</span> overdue</a>
+        <a href="{{ url_for('admin_dashboard',reviewer=row.key,review_due='today') }}" aria-label="{{ row.due_today }} due today for {{ row.email or row.name }}"><span data-count="today">{{ row.due_today }}</span> due today</a>
+      </td>
+      <td><a href="{{ url_for('admin_dashboard',reviewer=row.key,status='Open') }}" aria-label="View open cases for {{ row.email or row.name }}">View cases →</a></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endblock %}

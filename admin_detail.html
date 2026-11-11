@@ -1,0 +1,27 @@
+{% extends 'application.html' %}
+{% block review_controls %}
+<section class="panel documents-panel">
+  <div class="panel-heading"><h2>Reviewer assignment</h2><span class="count">{{ application.reviewer_name or 'Unassigned' }}</span></div>
+  <div class="review-controls">
+    {% if application.status in ('Submitted','Under review') %}
+      {% if reviewers %}
+      <form class="assignment-form" method="post" action="{{ url_for('admin_assign',reference=application.reference) }}">
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+        <input type="hidden" name="revision" value="{{ revision }}">
+        <label for="reviewer-id">Assign to reviewer</label>
+        <select id="reviewer-id" name="reviewer_id" required>
+          <option value="">Choose a reviewer</option>
+          {% for reviewer in reviewers %}<option value="{{ reviewer.id }}" {% if reviewer.id==application.reviewer_id %}selected{% endif %}>{{ reviewer.name }} · {{ reviewer.email }}</option>{% endfor %}
+        </select>
+        <label for="assignment-note">Assignment note</label>
+        <textarea id="assignment-note" name="note" rows="3" maxlength="300" aria-describedby="assignment-help" placeholder="Example: Move this case to the second reviewer for this demo."></textarea>
+        <p class="section-help" id="assignment-help">A note is required when changing reviewers. The applicant can read it in the activity history. Reassignment returns the case to Submitted so the new reviewer can start.</p>
+        <button class="button primary">Save assignment</button>
+      </form>
+      {% else %}<p class="notice">Create a reviewer account before assigning this application.</p><a class="button" href="{{ url_for('admin_reviewers') }}">Create reviewer →</a>{% endif %}
+    {% elif application.status=='Changes requested' %}
+    <p class="notice">Waiting for the applicant to correct and resubmit. Assignment can change after resubmission.</p>
+    {% else %}<p class="notice">The decision is complete. This assignment is kept in the application history.</p>{% endif %}
+  </div>
+</section>
+{% endblock %}

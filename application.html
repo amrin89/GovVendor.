@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}{{ application.reference }} · GovVendor{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('admin_dashboard' if admin_view else ('review_queue' if reviewing else 'dashboard')) }}">{{ '← Administration' if admin_view else ('← Review queue' if reviewing else '← My applications') }}</a>
+<div class="page-heading heading-actions">
+  <div><p class="eyebrow">{{ application.reference }}</p><h1>{{ application.company_name }}</h1>
+  <p>{{ 'Assign a reviewer and follow the application history.' if admin_view else ('Check the company details and attached PDFs before recording a decision.' if reviewing else 'Track your supplier registration here.') }}</p></div>
+  <span class="badge{% if application.status=='Approved' %} status-approved{% elif application.status=='Rejected' %} status-rejected{% endif %}">{{ application.status }}</span>
+</div>
+{% if application.status!='Draft' %}
+<p class="summary-link"><a class="button" href="{{ url_for('application_messages',reference=application.reference) }}">Messages →</a></p>
+{% endif %}
+{% if application.status=='Approved' %}
+<p class="summary-link"><a class="button" href="{{ url_for('admin_summary' if admin_view else ('review_summary' if reviewing else 'application_summary'),reference=application.reference) }}">Open demo approval summary →</a></p>
+{% endif %}
+{% if renewal %}
+<div class="notice renewal-context">
+  <strong>Renewal application</strong>
+  <p>Previous approval:
+    {% if not reviewing %}<a href="{{ url_for('application_detail',reference=renewal.reference) }}">{{ renewal.reference }}</a>{% else %}{{ renewal.reference }}{% endif %}.
+    Previous sample licence expiry: {{ renewal.licence_expiry }}.
+  </p>
+  <p><a href="{{ url_for('renewal_comparison',reference=application.reference) }}">Compare renewal details →</a></p>
+</div>
+{% endif %}
+{% if application.status=='Approved' and not reviewing %}
+<section class="panel renewal-panel" aria-labelledby="renew-title">
+  <div class="panel-heading"><h2 id="renew-title">Renew this registration</h2></div>
+  <div class="renewal-body">
+    {% if child %}
+    <p>{{ 'A newer renewal has been approved. Open it for the latest details.' if child.status=='Approved' else 'A renewal is already in progress. Continue with the same draft and reference.' }}</p>
+    <a class="button" href="{{ url_for('application_detail',reference=child.reference) }}">{{ 'Open approved renewal →' if child.status=='Approved' else 'Open existing renewal →' }}</a>
+    {% else %}
+    {% if expiry_days <= 30 %}
+    <p class="expiry-alert">{% if expiry_days < 0 %}The sample licence expired {{ -expiry_days }} day(s) ago.{% elif expiry_days == 0 %}The sample licence expires today.{% else %}The sample licence expires in {{ expiry_days }} day(s).{% endif %}</p>
+    {% endif %}
+    <p>Start a separate draft with your company details copied across. Add a later expiry date and upload both sample PDFs again. This approval stays in your history.</p>
+    <form method="post" action="{{ url_for('start_renewal',reference=application.reference) }}">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <button class="button primary">Start renewal →</button>
+    </form>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+{% if not reviewing and review and review.note and application.status in ('Changes requested','Approved','Rejected') %}
+<div class="notice {% if application.status=='Changes requested' %}attention{% endif %} reviewer-note">
+  <strong>Note from your reviewer</strong><p>{{ review.note }}</p>
+</div>
+{% endif %}
+{% if expired and editable %}<p class="notice attention">The sample licence expiry is in the past. Edit the application to correct the date before submitting.</p>{% endif %}
+{% if application.status!='Draft' %}{% include 'review_plan.html' %}{% endif %}
+<div class="detail-grid">
+  <section class="panel">
+    <div class="panel-heading"><h2>Company registration details</h2>
+      {% if editable %}<a href="{{ url_for('application_form',reference=application.reference) }}">{{ 'Edit details →' if application.status=='Changes requested' else 'Edit draft →' }}</a>{% endif %}
+    </div>
+    <dl class="details">
+      <div><dt>Company name</dt><dd>{{ application.company_name }}</dd></div>
+      <div><dt>Supplier category</dt><dd>{{ application.category }}</dd></div>
+      <div><dt>Sample licence reference</dt><dd>{{ application.trade_reference }}</dd></div>
+      <div><dt>Sample licence expiry</dt><dd>{{ application.licence_expiry }}</dd></div>
+      <div><dt>Contact name</dt><dd>{{ application.contact_name }}</dd></div>
+      <div><dt>Contact email</dt><dd>{{ application.contact_email }}</dd></div>
+    </dl>
+  </section>
+  <section class="panel">
+    <div class="panel-heading"><h2>Application activity</h2></div>
+    <ol class="activity">{% for event in events %}
+      <li><span class="activity-dot"></span><div>{{ event.description }}<small>{{ event.created_at[:10] }} · {{ event.created_at[11:16] }} Dubai time</small></div></li>
+    {% endfor %}</ol>
+  </section>
+</div>
+<section class="panel documents-panel" aria-labelledby="documents-title">
+  <div class="panel-heading"><h2 id="documents-title">Document checklist</h2><span class="count">{{ documents|length }} of {{ document_types|length }} attached</span></div>
+  <div class="documents-body">
+    {% for kind, label in document_types.items() %}
+    <div class="document-row">
+      <div>
+        <h3>{{ label }}</h3>
+        {% if kind in documents %}
+        <p><a href="{{ url_for('admin_document' if admin_view else ('review_document' if reviewing else 'download_document'),reference=application.reference,kind=kind) }}">{{ documents[kind].filename }}</a> <span class="badge attached">Attached</span></p>
+        <p class="document-history-link">Version {{ documents[kind].version }} · <a href="{{ url_for('document_history',reference=application.reference,kind=kind) }}">View history →</a></p>
+        {% else %}<p>Not attached yet</p>{% endif %}
+      </div>
+      {% if editable %}
+      <form class="upload-form" method="post" enctype="multipart/form-data" action="{{ url_for('upload_document',reference=application.reference,kind=kind) }}">
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+        <label for="file-{{ kind }}">Choose {{ label|lower }} (PDF, up to 2 MB)</label>
+        <input id="file-{{ kind }}" name="document" type="file" accept=".pdf,application/pdf" required>
+        <button class="button">{{ 'Replace PDF' if kind in documents else 'Upload PDF' }}</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% if editable %}
+    <form class="submit-application" method="post" action="{{ url_for('submit_application',reference=application.reference) }}">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      {% if documents|length != document_types|length or expired or not renewal_date_valid %}
+      <p>Attach both sample PDFs and use a current sample licence expiry date to submit.{% if renewal %} For this renewal, choose an expiry later than {{ renewal.licence_expiry }}.{% endif %}</p>
+      {% else %}
+      <p>Submitting locks your details and documents while the reviewer checks them.</p>
+      {% endif %}
+      <button class="button primary" {% if documents|length != document_types|length or expired or not renewal_date_valid %}disabled{% endif %}>{{ 'Resubmit for demo review →' if application.status=='Changes requested' else 'Submit for demo review →' }}</button>
+    </form>
+    {% elif not reviewing %}
+    <p class="notice">{% if application.status=='Submitted' %}Your application is waiting for a reviewer.
+      {% elif application.status=='Under review' %}A reviewer is checking your application.
+      {% else %}The demo review is complete. The decision is recorded in GovVendor.{% endif %}</p>
+    {% endif %}
+  </div>
+</section>
+{% block review_controls %}{% endblock %}
+{% endblock %}

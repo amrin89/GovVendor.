@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ application.reference }} — GovVendor demo approval summary</title>
+  <link rel="stylesheet" href="{{ url_for('static',filename='summary.css') }}">
+</head>
+<body>
+  <nav class="print-tools" aria-label="Summary actions">
+    <a href="{{ url_for('admin_detail' if g.user.role=='administrator' else ('review_detail' if reviewing else 'application_detail'),reference=application.reference) }}">← Back to application</a>
+    <p>Press <strong>Ctrl + P</strong> to print. Choose <strong>Save as PDF</strong> to save a copy.</p>
+  </nav>
+  <main class="summary-sheet">
+    <header>
+      <p class="brand">GovVendor <span>PORTFOLIO DEMO</span></p>
+      <h1>Demo approval summary</h1>
+      <p class="disclaimer">Fictional demonstration only. Not a government registration, trade licence or official certificate.</p>
+    </header>
+    <div class="reference-line"><span>{{ application.reference }}</span><strong>Approved in GovVendor</strong></div>
+    <section aria-labelledby="company-title">
+      <h2 id="company-title">{{ application.company_name }}</h2>
+      <dl>
+        {% if renewal %}<div><dt>Renewal of</dt><dd>{{ renewal.reference }}</dd></div><div><dt>Previous sample licence expiry</dt><dd>{{ renewal.licence_expiry }}</dd></div>{% endif %}
+        <div><dt>Supplier category</dt><dd>{{ application.category }}</dd></div>
+        <div><dt>Sample licence reference</dt><dd>{{ application.trade_reference }}</dd></div>
+        <div><dt>Sample licence expiry</dt><dd>{{ application.licence_expiry }}</dd></div>
+        <div><dt>Contact name</dt><dd>{{ application.contact_name }}</dd></div>
+        <div><dt>Contact email</dt><dd>{{ application.contact_email }}</dd></div>
+        <div><dt>Created · Dubai time</dt><dd>{{ application.created_at[:10] }} {{ application.created_at[11:16] }}</dd></div>
+        <div><dt>Approved · Dubai time</dt><dd>{{ application.updated_at[:10] }} {{ application.updated_at[11:16] }}</dd></div>
+        {% if review %}<div><dt>Demo reviewer</dt><dd>{{ review.name }}</dd></div>{% endif %}
+      </dl>
+    </section>
+    <section aria-labelledby="documents-title">
+      <h2 id="documents-title">Attachments reviewed</h2>
+      <ul>{% for kind,label in document_types.items() %}
+        <li><strong>{{ label }}:</strong> {{ documents[kind].filename if kind in documents else 'Not attached' }}{% if kind in documents %} (version {{ documents[kind].version }}){% endif %}</li>
+      {% endfor %}</ul>
+    </section>
+    {% if review and review.note %}
+    <section class="review-note" aria-labelledby="note-title"><h2 id="note-title">Reviewer's note</h2><p>{{ review.note }}</p></section>
+    {% endif %}
+    <footer>
+      <p>Independent learning project. Not affiliated with Dubai Government. The demo does not verify official licences or supplier eligibility.</p>
+      <p>Generated {{ generated_at[:10] }} at {{ generated_at[11:16] }} Dubai time.</p>
+    </footer>
+  </main>
+</body>
+</html>

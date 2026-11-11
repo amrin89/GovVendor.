@@ -1,0 +1,3 @@
+<span class="badge priority-{{ application.plan.priority|lower }}">{{ application.plan.priority }}</span>
+{% if application.plan.target_date %}<small>Target <time class="review-target-date" datetime="{{ application.plan.target_date }}">{{ application.plan.target_date }}</time></small>{% endif %}
+<small class="timing-{{ application.plan.timing }}">{{ application.plan.label }}</small>

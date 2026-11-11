@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Messages · {{ application.reference }} · GovVendor{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ back_url }}">← Back to application</a>
+<div class="page-heading heading-actions">
+  <div><p class="eyebrow">{{ application.reference }}</p><h1>Application messages</h1><p>{{ application.company_name }}</p></div>
+  <span class="badge{% if application.status=='Approved' %} status-approved{% elif application.status=='Rejected' %} status-rejected{% endif %}">{{ application.status }}</span>
+</div>
+<div class="notice conversation-context">
+  <p>Messages are shared with the applicant, the currently assigned reviewer and administrators. A replacement reviewer can read the earlier conversation.</p>
+  <p><strong>Current reviewer:</strong> {{ assigned.name if assigned else 'Not assigned yet' }}. Sending a message keeps the application at its current status.</p>
+</div>
+<section class="panel conversation-panel" aria-labelledby="conversation-title">
+  <div class="panel-heading"><h2 id="conversation-title">Conversation</h2><span class="count">{{ total }} message(s)</span></div>
+  {% if messages %}
+  <ol class="conversation-list" start="{{ (page-1)*20+1 }}">
+    {% for message in messages %}
+    <li class="conversation-message {% if message.author_id==g.user.id %}message-own{% endif %}">
+      <div class="conversation-author"><strong>{{ message.name }}</strong><span class="badge">{{ 'Applicant' if message.author_role=='applicant' else 'Reviewer' }}</span>{% if message.author_id==g.user.id %}<span class="count">You</span>{% endif %}</div>
+      <p class="conversation-body">{{ message.body }}</p>
+      <p class="conversation-time">{{ message.created_at[:10] }} · {{ message.created_at[11:16] }} Dubai time</p>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}<div class="conversation-empty"><h3>No messages yet</h3><p>Use this conversation for questions about this fictional application.</p></div>{% endif %}
+</section>
+{% if pages>1 %}
+<nav class="inbox-pages" aria-label="Conversation pages">
+  {% if page>1 %}<a class="button" href="{{ url_for('application_messages',reference=application.reference,page=page-1) }}">← Older messages</a>{% endif %}
+  <span class="count">Page {{ page }} of {{ pages }}</span>
+  {% if page<pages %}<a class="button" href="{{ url_for('application_messages',reference=application.reference,page=page+1) }}">Newer messages →</a>{% endif %}
+</nav>
+{% endif %}
+<div id="conversation-end"></div>
+{% if can_send %}
+<section class="panel documents-panel" aria-labelledby="reply-title">
+  <div class="panel-heading"><h2 id="reply-title">Send a message</h2></div>
+  <form class="conversation-form" method="post" action="{{ url_for('application_messages',reference=application.reference) }}">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="message_token" value="{{ message_token }}">
+    <input type="hidden" name="reviewer_id" value="{{ assigned.reviewer_id }}">
+    <label for="message-body">Your message</label>
+    <textarea id="message-body" name="body" rows="4" maxlength="{{ message_max_chars }}" required aria-describedby="message-help{% if message_error %} message-error{% endif %}" {% if message_error %}aria-invalid="true"{% endif %}>{{ message_body }}</textarea>
+    <p class="field-help" id="message-help">Up to {{ message_max_chars }} characters. The other account receives a notification inside GovVendor. Messages stay in this application’s history.</p>
+    {% if message_error %}<p class="field-error" id="message-error" role="alert">{{ message_error }}</p>{% endif %}
+    <button class="button primary" type="submit">Send message</button>
+  </form>
+</section>
+{% else %}
+<p class="notice conversation-lock">{% if g.user.role=='administrator' %}Administrator view: you can read this conversation.{% elif application.status in ('Approved','Rejected') %}The decision is complete. Earlier messages remain available to read.{% elif not assigned %}Messages become available once a reviewer is assigned. The reviewer can open the application and click Start review.{% else %}This conversation is read-only.{% endif %}</p>
+{% if message_error %}<p class="message error" role="alert">{{ message_error }}</p>{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Demo walkthrough · GovVendor{% endblock %}
+{% block content %}
+<div class="page-heading heading-actions">
+  <div><p class="eyebrow">GovVendor v{{ app_version }}</p><h1>Demo walkthrough</h1><p>Follow one fictional supplier case through all three workspaces.</p></div>
+  <a class="button primary" href="{{ url_for(workspace) }}">{{ 'Open your workspace →' if g.user else 'Sign in →' }}</a>
+</div>
+<p class="notice walkthrough-intro">Use your existing applicant, reviewer and administrator accounts. For a fresh installation, follow <strong>START_HERE.md</strong> and <strong>ADMIN_GUIDE.md</strong> in the project folder first. Sign out before switching roles, or use separate browser profiles.</p>
+<ol class="walkthrough-steps">
+  <li class="panel">
+    <p class="eyebrow">01 · Applicant</p><h2>Submit a registration</h2>
+    <p>Open <strong>New registration</strong>. Enter a fictional company such as <strong>Gulf Trading LLC</strong>, select <strong>Office supplies</strong>, and use a sample reference such as <strong>DEMO-LIC-104</strong> with a future expiry date.</p>
+    <p>Save the draft. Upload <strong>sample-trade-licence.pdf</strong> and <strong>sample-company-profile.pdf</strong> from <strong>sample-documents</strong>. Click <strong>Submit for demo review</strong> and keep the GV- reference.</p>
+  </li>
+  <li class="panel">
+    <p class="eyebrow">02 · Administrator</p><h2>Assign the case</h2>
+    <p>Find the GV- reference in <strong>Administration</strong>. Under <strong>Reviewer assignment</strong>, choose a reviewer and click <strong>Save assignment</strong>. Open <strong>Reviewer workload</strong> to see it in that reviewer’s open cases.</p>
+  </li>
+  <li class="panel">
+    <p class="eyebrow">03 · Reviewer</p><h2>Review and approve</h2>
+    <p>Open the assigned case from <strong>Review queue</strong> and click <strong>Start review</strong>. Check the company details and both PDFs, tick all four review checks, then click <strong>Save checklist</strong> and <strong>Approve</strong>.</p>
+    <p>The case should now show <strong>Approved</strong>. Click <strong>Open demo approval summary</strong> to see the printable record.</p>
+  </li>
+  <li class="panel">
+    <p class="eyebrow">04 · Applicant</p><h2>Renew the approval</h2>
+    <p>Return to the approved case and click <strong>Start renewal</strong>. Save with a later expiry. Click <strong>Compare renewal details</strong>: if you changed only the expiry, it should show <strong>1 of 4 fields changed</strong>.</p>
+    <p>Upload the sample PDFs to this renewal and submit it for review. It has its own GV- reference.</p>
+  </li>
+  <li class="panel">
+    <p class="eyebrow">05 · Administrator and reviewer</p><h2>Check the approval handover</h2>
+    <p>While the renewal is pending, <strong>Approved suppliers</strong> still shows the original approval. Assign and approve the renewal using the same review steps. The directory should then show the renewal.</p>
+    <p>Search <strong>Activity log</strong> by the renewal reference to trace its history. The original approval remains available in <strong>Administration</strong>.</p>
+  </li>
+</ol>
+{% endblock %}

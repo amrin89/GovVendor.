@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Administration · GovVendor{% endblock %}
+{% block content %}
+<div class="page-heading heading-actions">
+  <div><p class="eyebrow">Administrator workspace</p><h1>Application administration</h1><p>Assign submitted applications and follow cases across the reviewer team.</p></div>
+  <a class="button" href="{{ url_for('admin_reviewers') }}">Manage reviewers →</a>
+</div>
+{% include 'list_tools.html' %}
+<section class="panel">
+  <div class="panel-heading"><h2>Applications after submission</h2><span class="count">{{ applications|length }} of {{ total }} shown</span></div>
+  {% if applications %}
+  <div class="table-wrap"><table><thead><tr><th scope="col">Company / reference</th><th scope="col">Status</th><th scope="col">Review plan</th><th scope="col">Assigned reviewer</th><th scope="col">Action</th></tr></thead>
+    <tbody>{% for application in applications %}<tr>
+      <td>{{ application.company_name }}<small>{{ application.reference }}</small>{% if application.renewal_of %}<small class="renewal-tag">Renewal of {{ application.renewal_of }}</small>{% endif %}</td>
+      <td><span class="badge">{{ application.status }}</span></td>
+      <td>{% include 'review_plan_cell.html' %}</td>
+      <td>{{ application.reviewer_name or 'Unassigned' }}</td>
+      <td><a href="{{ url_for('admin_detail',reference=application.reference) }}">{{ 'Open / assign →' if application.status in ('Submitted','Under review') else 'Open history →' }}</a></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<div class="empty-state"><h2>No applications match.</h2><p>Applications appear after an applicant submits them.</p><a href="{{ url_for('admin_dashboard') }}">Clear filters</a></div>{% endif %}
+</section>
+{% endblock %}

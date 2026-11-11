@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Approved suppliers · GovVendor{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <p class="eyebrow">Administrator workspace</p>
+  <h1>Approved suppliers</h1>
+  <p>Find approved suppliers and check their recorded licence expiry. Each registration appears once, using its latest approved renewal.</p>
+</div>
+<section class="summary-cards" aria-label="Supplier licence totals">
+  <a class="summary-card" href="{{ url_for('admin_suppliers', q=q, category=selected_category) }}" {% if not selected_licence %}aria-current="true"{% endif %}>
+    <span>All suppliers</span><strong data-licence-total="all">{{ total }}</strong>
+  </a>
+  {% for key, label in licence_states.items() %}
+  <a class="summary-card" href="{{ url_for('admin_suppliers', q=q, category=selected_category, licence=key) }}" {% if selected_licence==key %}aria-current="true"{% endif %}>
+    <span>{{ label }}</span><strong data-licence-total="{{ key }}">{{ counts[key] }}</strong>
+  </a>
+  {% endfor %}
+</section>
+<p class="totals-help">Totals cover the full directory. Expiring soon means the licence expires today or within 30 days, using Dubai’s date.</p>
+<form class="list-filters staff-filters supplier-filters" method="get" action="{{ url_for('admin_suppliers') }}">
+  <div class="search-field"><label for="supplier-q">Company or approval reference</label>
+    <input id="supplier-q" name="q" type="search" value="{{ q }}" maxlength="120" placeholder="Company or GV- reference">
+  </div>
+  <div><label for="supplier-category">Supplier category</label>
+    <select id="supplier-category" name="category"><option value="">All categories</option>
+      {% for item in categories %}<option value="{{ item }}" {% if selected_category==item %}selected{% endif %}>{{ item }}</option>{% endfor %}
+    </select>
+  </div>
+  <div><label for="supplier-licence">Licence status</label>
+    <select id="supplier-licence" name="licence"><option value="">All licence statuses</option>
+      {% for key, label in licence_states.items() %}<option value="{{ key }}" {% if selected_licence==key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="actions"><button class="button primary">Apply filters</button><a class="clear-filters" href="{{ url_for('admin_suppliers') }}">Clear filters</a></div>
+</form>
+<section class="panel" aria-labelledby="supplier-results">
+  <div class="panel-heading"><h2 id="supplier-results">Supplier directory</h2><span class="count">{{ suppliers|length }} of {{ total }} shown</span></div>
+  {% if suppliers %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Company / reference</th><th scope="col">Category</th><th scope="col">Licence expiry</th><th scope="col">Licence status</th><th scope="col">Action</th></tr></thead>
+    <tbody>{% for supplier in suppliers %}<tr>
+      <td>{{ supplier.company_name }}<small>{{ supplier.reference }}</small></td>
+      <td>{{ supplier.category }}</td>
+      <td><time class="review-target-date" datetime="{{ supplier.licence_expiry }}">{{ supplier.licence_expiry }}</time></td>
+      <td><span class="badge licence-{{ supplier.licence }}">{{ licence_states[supplier.licence] }}</span>
+        {% if supplier.days==0 %}<small>Expires today</small>
+        {% elif supplier.days>0 %}<small>{{ supplier.days }} {{ 'day' if supplier.days==1 else 'days' }} left</small>
+        {% else %}<small>{{ -supplier.days }} {{ 'day' if supplier.days==-1 else 'days' }} overdue</small>{% endif %}
+      </td>
+      <td><a href="{{ url_for('admin_detail', reference=supplier.reference) }}" aria-label="Open approval for {{ supplier.company_name }} ({{ supplier.reference }})">Open approval →</a></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% elif total %}
+  <div class="empty-state"><h2>No suppliers match.</h2><p>Try a different name, category or licence status.</p><a href="{{ url_for('admin_suppliers') }}">Clear filters</a></div>
+  {% else %}
+  <div class="empty-state"><h2>No approved suppliers yet.</h2><p>Suppliers appear here after their application is approved.</p><a href="{{ url_for('admin_dashboard') }}">Open administration →</a></div>
+  {% endif %}
+</section>
+{% endblock %}

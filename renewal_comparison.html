@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Renewal comparison · {{ application.reference }} · GovVendor{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for(back_endpoint,reference=application.reference) }}">← Back to renewal</a>
+<div class="page-heading heading-actions">
+  <div><p class="eyebrow">{{ application.reference }}</p><h1>Renewal comparison</h1><p>{{ application.company_name }} · Saved company and sample licence details</p></div>
+  <span class="badge{% if application.status=='Approved' %} status-approved{% elif application.status=='Rejected' %} status-rejected{% endif %}">{{ application.status }}</span>
+</div>
+{% if application.licence_expiry <= previous.licence_expiry %}
+<p class="notice attention">Choose a sample licence expiry later than {{ previous.licence_expiry }} before submitting the renewal.</p>
+{% endif %}
+<section class="panel" aria-labelledby="comparison-title">
+  <div class="panel-heading"><h2 id="comparison-title">Company and licence details</h2><span class="count">{{ changed }} of {{ rows|length }} fields changed</span></div>
+  <div class="table-wrap"><table class="renewal-comparison-table">
+    <thead><tr><th scope="col">Field</th><th scope="col">Previous approval<small>{{ previous.reference }}</small></th><th scope="col">Renewal<small>{{ application.reference }}</small></th><th scope="col">Change</th></tr></thead>
+    <tbody>{% for row in rows %}<tr{% if row.changed %} class="comparison-changed"{% endif %}>
+      <th scope="row">{{ row.label }}</th>
+      <td>{{ row.previous }}</td>
+      <td>{{ row.current }}</td>
+      <td>{% if row.changed %}<span class="badge priority-high">Changed</span>{% else %}<span class="count">Unchanged</span>{% endif %}</td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endblock %}
