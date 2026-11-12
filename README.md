@@ -54,3 +54,11 @@ Use `./.venv/bin/python` in place of `.\.venv\Scripts\python.exe` on macOS or Li
 - [PROJECT_GUIDE.md](PROJECT_GUIDE.md): detailed workflows, implementation notes, and milestone history.
 
 GovVendor is an independent demonstration. It has no government affiliation or live government integration and does not issue official registrations. The packaged project includes sample PDFs, but no local database, uploaded documents, or account credentials.
+
+## App Preview
+
+![GovVendor screenshot 1](screenshots/application.png.jpeg)
+![GovVendor screenshot 2](screenshots/reviewer-queue.png.jpeg)
+![GovVendor screenshot 3](screenshots/administration.png.jpeg)
+![GovVendor screenshot 4](screenshots/activity-log.png.jpeg)
+![GovVendor screenshot 5](screenshots/notification.png.jpeg)
